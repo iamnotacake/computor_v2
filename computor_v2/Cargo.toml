@@ -4,9 +4,13 @@ version = "0.1.0"
 authors = ["Anatoliy Lischynsky <iamnotacake@protonmail.com>"]
 edition = "2018"
 
+[profile.release]
+lto = true
+
 [build-dependencies]
 lalrpop = "*"
 
 [dependencies]
 lalrpop-util = "*"
 # regex = "*"
+rustyline = "*"
