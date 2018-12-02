@@ -1,4 +1,4 @@
-#![feature(box_syntax)]
+#![feature(box_syntax, box_patterns)]
 
 #[macro_use]
 extern crate lalrpop_util;
@@ -17,6 +17,7 @@ pub enum Expr {
     Add(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),
+    Pow(Box<Expr>, Box<Expr>),
 }
 
 pub fn process_line(line: &str, context: &mut Context) {
