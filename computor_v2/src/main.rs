@@ -1,7 +1,6 @@
 extern crate computor_v2;
 extern crate rustyline;
 
-use computor_v2::process_line;
 use computor_v2::Context;
 use rustyline::error::ReadlineError;
 
@@ -11,7 +10,10 @@ fn main() {
 
     loop {
         match rl.readline("> ") {
-            Ok(line) => process_line(&line, &mut context),
+            Ok(line) => match computor_v2::parse(&line) {
+                Ok(expr) => println!("OK: {:?}", expr),
+                Err(err) => println!("Error: {}", err),
+            },
             Err(ReadlineError::Interrupted) => {}
             Err(ReadlineError::Eof) => break,
             Err(err) => panic!("{}", err),

@@ -20,9 +20,9 @@ pub enum Expr {
     Pow(Box<Expr>, Box<Expr>),
 }
 
-pub fn process_line(line: &str, context: &mut Context) {
+pub fn parse(line: &str) -> Result<Expr, String> {
     match grammar::AddSubParser::new().parse(line) {
-        Ok(expr) => println!("OK: {:?}", expr),
-        Err(err) => println!("Error: {}", err),
+        Ok(expr) => Ok(expr),
+        Err(err) => Err(err.to_string()),
     }
 }
