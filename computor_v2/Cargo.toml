@@ -12,5 +12,5 @@ lalrpop = "*"
 
 [dependencies]
 lalrpop-util = "*"
-# regex = "*"
+regex = "*"
 rustyline = "*"
