@@ -2,10 +2,33 @@ use crate::Expr;
 
 grammar;
 
-Decimal: f64 = {
-    <s:r"[0-9]+(\.[0-9]+)?"> => s.parse().unwrap()
-};
+pub AddSub: Expr = {
+    <x:AddSub> "+" <y:MulDiv> => Expr::Add(box x, box y),
+    <x:AddSub> "-" <y:MulDiv> => Expr::Add(box x, box Expr::Neg(box y)),
+    MulDiv,
+}
+
+pub MulDiv: Expr = {
+    <x:MulDiv> "*" <y:Term> => Expr::Mul(box x, box y),
+    <x:MulDiv> "/" <y:Term> => Expr::Div(box x, box y),
+    Term,
+}
+
+pub Term: Expr = {
+    Number,
+    Var,
+    "(" <AddSub> ")",
+    Neg,
+}
+
+pub Neg: Expr = {
+    "-" <x:Term> => Expr::Neg(box x),
+}
 
 pub Number: Expr = {
-    Decimal => Expr::Number(<>)
+    <x:r"[0-9]+(\.[0-9]+)?"> => Expr::Number(x.parse().unwrap()),
+}
+
+pub Var: Expr = {
+    <x:r"[a-zA-Z][a-zA-Z0-9]*"> => Expr::Var(x.to_string()),
 }
