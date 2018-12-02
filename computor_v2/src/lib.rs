@@ -1,5 +1,22 @@
+#[macro_use]
+extern crate lalrpop_util;
+
+lalrpop_mod!(pub grammar);
+
 use std::collections::HashMap;
 
-pub enum Value {}
+pub type Context = HashMap<String, Expr>;
 
-pub type Context = HashMap<String, Value>;
+#[derive(Debug)]
+pub enum Expr {
+    Number(f64),
+    // Neg(Box<Expr>),
+    // Add(Box<Expr>, Box<Expr>),
+}
+
+pub fn process_line(line: &str, context: &mut Context) {
+    match grammar::NumberParser::new().parse(line) {
+        Ok(expr) => println!("OK: {:?}", expr),
+        Err(err) => println!("Error: {}", err),
+    }
+}

@@ -1,12 +1,9 @@
 extern crate computor_v2;
 extern crate rustyline;
 
+use computor_v2::process_line;
 use computor_v2::Context;
 use rustyline::error::ReadlineError;
-
-fn process_line(line: &str, context: &mut Context) {
-    // TODO
-}
 
 fn main() {
     let mut rl = rustyline::Editor::<()>::new();
