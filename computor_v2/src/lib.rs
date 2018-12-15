@@ -73,6 +73,7 @@ impl Expr {
 
     pub fn div(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
+            (Expr::Number(x), Expr::Number(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x / y)),
             _ => unimplemented!("div !Number !Number"),
         }
