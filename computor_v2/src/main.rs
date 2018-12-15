@@ -11,7 +11,10 @@ fn main() {
     loop {
         match rl.readline("> ") {
             Ok(line) => match computor_v2::parse(&line) {
-                Ok(expr) => println!("OK: {:?}", expr),
+                Ok(expr) => {
+                    println!("Parsed: {:?}", expr);
+                    println!("Result: {:?}", expr.run(&mut context))
+                }
                 Err(err) => println!("Error: {}", err),
             },
             Err(ReadlineError::Interrupted) => {}

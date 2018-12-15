@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 pub type Context = HashMap<String, Expr>;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Expr {
     Number(f64),
     Var(String),
@@ -18,6 +18,43 @@ pub enum Expr {
     Mul(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
+}
+
+impl Expr {
+    pub fn run(self, context: &mut Context) -> Expr {
+        match self {
+            Expr::Number(x) => Expr::Number(x),
+            Expr::Var(name) => context.get(&name).unwrap().clone(),
+            Expr::Neg(box x) => x.run(context).neg(context),
+            Expr::Add(box x, box y) => x.run(context).add(y.run(context), context),
+            Expr::Mul(box x, box y) => x.run(context).mul(y.run(context), context),
+            Expr::Div(box x, box y) => x.run(context).div(y.run(context), context),
+            Expr::Pow(box x, box y) => x.run(context).pow(y.run(context), context),
+        }
+    }
+
+    pub fn neg(self, context: &mut Context) -> Expr {
+        match self {
+            Expr::Number(x) => Expr::Number(-x),
+            _ => unimplemented!("neg !Number"),
+        }
+    }
+
+    pub fn add(self, other: Expr, context: &mut Context) -> Expr {
+        unimplemented!("add * *")
+    }
+
+    pub fn mul(self, other: Expr, context: &mut Context) -> Expr {
+        unimplemented!("mul * *")
+    }
+
+    pub fn div(self, other: Expr, context: &mut Context) -> Expr {
+        unimplemented!("div * *")
+    }
+
+    pub fn pow(self, other: Expr, context: &mut Context) -> Expr {
+        unimplemented!("pow * *")
+    }
 }
 
 pub fn parse(line: &str) -> Result<Expr, String> {
