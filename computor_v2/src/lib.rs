@@ -41,19 +41,31 @@ impl Expr {
     }
 
     pub fn add(self, other: Expr, context: &mut Context) -> Expr {
-        unimplemented!("add * *")
+        match (self, other) {
+            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x + y),
+            _ => unimplemented!("add !Number !Number"),
+        }
     }
 
     pub fn mul(self, other: Expr, context: &mut Context) -> Expr {
-        unimplemented!("mul * *")
+        match (self, other) {
+            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x * y),
+            _ => unimplemented!("mul !Number !Number"),
+        }
     }
 
     pub fn div(self, other: Expr, context: &mut Context) -> Expr {
-        unimplemented!("div * *")
+        match (self, other) {
+            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x / y),
+            _ => unimplemented!("div !Number !Number"),
+        }
     }
 
     pub fn pow(self, other: Expr, context: &mut Context) -> Expr {
-        unimplemented!("pow * *")
+        match (self, other) {
+            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x.powf(y)),
+            _ => unimplemented!("pow !Number !Number"),
+        }
     }
 }
 
