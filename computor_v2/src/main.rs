@@ -1,7 +1,9 @@
 extern crate computor_v2;
+extern crate failure;
 extern crate rustyline;
 
 use computor_v2::Context;
+use failure::Fail;
 use rustyline::error::ReadlineError;
 
 fn main() {
@@ -13,7 +15,17 @@ fn main() {
             Ok(line) => match computor_v2::parse(&line) {
                 Ok(expr) => {
                     println!("Parsed: {}", expr.to_string());
-                    println!("Result: {}", expr.run(&mut context).to_string())
+
+                    match expr.run(&mut context) {
+                        Ok(result) => println!("Result: {}", result.to_string()),
+                        Err(err) => {
+                            println!("Error: {}", err);
+
+                            if let Some(bt) = err.cause().and_then(|cause| cause.backtrace()) {
+                                println!("{}", bt);
+                            }
+                        }
+                    }
                 }
                 Err(err) => println!("Error: {}", err),
             },

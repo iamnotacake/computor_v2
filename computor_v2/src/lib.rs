@@ -2,6 +2,9 @@
 
 #[macro_use]
 extern crate lalrpop_util;
+extern crate failure;
+#[macro_use]
+extern crate failure_derive;
 
 lalrpop_mod!(pub grammar);
 
@@ -21,50 +24,63 @@ pub enum Expr {
     Pow(Box<Expr>, Box<Expr>),
 }
 
+#[derive(Fail, Debug)]
+pub enum ExprError {
+    #[fail(display = "parse error: {}", err)]
+    ParseError { err: String },
+    #[fail(display = "undefined variable: {}", name)]
+    UndefinedVariable { name: String },
+    #[fail(display = "division by zero")]
+    DivisionByZero,
+}
+
 impl Expr {
-    pub fn run(self, context: &mut Context) -> Expr {
+    pub fn run(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
-            Expr::Number(x) => Expr::Number(x),
-            Expr::Var(name) => context.get(&name).unwrap().clone(),
-            Expr::Neg(box x) => x.run(context).neg(context),
-            Expr::Add(box x, box y) => x.run(context).add(y.run(context), context),
-            Expr::Mul(box x, box y) => x.run(context).mul(y.run(context), context),
-            Expr::Div(box x, box y) => x.run(context).div(y.run(context), context),
-            Expr::Pow(box x, box y) => x.run(context).pow(y.run(context), context),
+            Expr::Number(x) => Ok(Expr::Number(x)),
+            Expr::Var(name) => match context.get(&name) {
+                Some(expr) => Ok(expr.clone()),
+                None => Err(ExprError::UndefinedVariable { name: name.clone() }),
+            },
+            Expr::Neg(box x) => x.run(context)?.neg(context),
+            Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
+            Expr::Mul(box x, box y) => x.run(context)?.mul(y.run(context)?, context),
+            Expr::Div(box x, box y) => x.run(context)?.div(y.run(context)?, context),
+            Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
         }
     }
 
-    pub fn neg(self, context: &mut Context) -> Expr {
+    pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
-            Expr::Number(x) => Expr::Number(-x),
+            Expr::Number(x) => Ok(Expr::Number(-x)),
             _ => unimplemented!("neg !Number"),
         }
     }
 
-    pub fn add(self, other: Expr, context: &mut Context) -> Expr {
+    pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x + y),
+            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x + y)),
             _ => unimplemented!("add !Number !Number"),
         }
     }
 
-    pub fn mul(self, other: Expr, context: &mut Context) -> Expr {
+    pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x * y),
+            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x * y)),
             _ => unimplemented!("mul !Number !Number"),
         }
     }
 
-    pub fn div(self, other: Expr, context: &mut Context) -> Expr {
+    pub fn div(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x / y),
+            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x / y)),
             _ => unimplemented!("div !Number !Number"),
         }
     }
 
-    pub fn pow(self, other: Expr, context: &mut Context) -> Expr {
+    pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Expr::Number(x.powf(y)),
+            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x.powf(y))),
             _ => unimplemented!("pow !Number !Number"),
         }
     }
@@ -92,9 +108,11 @@ impl ToString for Expr {
     }
 }
 
-pub fn parse(line: &str) -> Result<Expr, String> {
+pub fn parse(line: &str) -> Result<Expr, ExprError> {
     match grammar::AddSubParser::new().parse(line) {
         Ok(expr) => Ok(expr),
-        Err(err) => Err(err.to_string()),
+        Err(err) => Err(ExprError::ParseError {
+            err: err.to_string(),
+        }),
     }
 }
