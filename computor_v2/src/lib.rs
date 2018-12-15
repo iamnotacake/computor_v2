@@ -6,6 +6,7 @@ extern crate lalrpop_util;
 lalrpop_mod!(pub grammar);
 
 use std::collections::HashMap;
+use std::string::ToString;
 
 pub type Context = HashMap<String, Expr>;
 
@@ -65,6 +66,28 @@ impl Expr {
         match (self, other) {
             (Expr::Number(x), Expr::Number(y)) => Expr::Number(x.powf(y)),
             _ => unimplemented!("pow !Number !Number"),
+        }
+    }
+}
+
+impl ToString for Expr {
+    fn to_string(&self) -> String {
+        match self {
+            Expr::Number(ref x) => x.to_string(),
+            Expr::Var(ref x) => x.clone(),
+            Expr::Neg(ref x) => "-".to_string() + &x.to_string(),
+            Expr::Add(ref x, ref y) => {
+                "(".to_string() + &x.to_string() + " + " + &y.to_string() + ")"
+            }
+            Expr::Mul(ref x, ref y) => {
+                "(".to_string() + &x.to_string() + " * " + &y.to_string() + ")"
+            }
+            Expr::Div(ref x, ref y) => {
+                "(".to_string() + &x.to_string() + " / " + &y.to_string() + ")"
+            }
+            Expr::Pow(ref x, ref y) => {
+                "(".to_string() + &x.to_string() + " ^ " + &y.to_string() + ")"
+            }
         }
     }
 }

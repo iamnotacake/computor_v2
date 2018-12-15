@@ -12,8 +12,8 @@ fn main() {
         match rl.readline("> ") {
             Ok(line) => match computor_v2::parse(&line) {
                 Ok(expr) => {
-                    println!("Parsed: {:?}", expr);
-                    println!("Result: {:?}", expr.run(&mut context))
+                    println!("Parsed: {}", expr.to_string());
+                    println!("Result: {}", expr.run(&mut context).to_string())
                 }
                 Err(err) => println!("Error: {}", err),
             },
