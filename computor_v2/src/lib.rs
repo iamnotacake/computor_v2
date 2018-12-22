@@ -15,7 +15,7 @@ pub type Context = HashMap<String, Expr>;
 
 #[derive(Clone, Debug)]
 pub enum Expr {
-    Number(f64),
+    Real(f64),
     Var(String),
     Neg(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -37,7 +37,7 @@ pub enum ExprError {
 impl Expr {
     pub fn run(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
-            Expr::Number(x) => Ok(Expr::Number(x)),
+            Expr::Real(x) => Ok(Expr::Real(x)),
             Expr::Var(name) => match context.get(&name) {
                 Some(expr) => Ok(expr.clone()),
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
@@ -52,37 +52,37 @@ impl Expr {
 
     pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
-            Expr::Number(x) => Ok(Expr::Number(-x)),
-            _ => unimplemented!("neg !Number"),
+            Expr::Real(x) => Ok(Expr::Real(-x)),
+            _ => unimplemented!("neg !Real"),
         }
     }
 
     pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x + y)),
-            _ => unimplemented!("add !Number !Number"),
+            (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
+            _ => unimplemented!("add !Real !Real"),
         }
     }
 
     pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x * y)),
-            _ => unimplemented!("mul !Number !Number"),
+            (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
+            _ => unimplemented!("mul !Real !Real"),
         }
     }
 
     pub fn div(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
-            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x / y)),
-            _ => unimplemented!("div !Number !Number"),
+            (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
+            (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x / y)),
+            _ => unimplemented!("div !Real !Real"),
         }
     }
 
     pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Number(x), Expr::Number(y)) => Ok(Expr::Number(x.powf(y))),
-            _ => unimplemented!("pow !Number !Number"),
+            (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x.powf(y))),
+            _ => unimplemented!("pow !Real !Real"),
         }
     }
 }
@@ -90,7 +90,7 @@ impl Expr {
 impl ToString for Expr {
     fn to_string(&self) -> String {
         match self {
-            Expr::Number(ref x) => x.to_string(),
+            Expr::Real(ref x) => x.to_string(),
             Expr::Var(ref x) => x.clone(),
             Expr::Neg(ref x) => "-".to_string() + &x.to_string(),
             Expr::Add(ref x, ref y) => {

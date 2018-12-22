@@ -20,7 +20,7 @@ pub Pow: Expr = {
 }
 
 pub Term: Expr = {
-    Number,
+    Real,
     Var,
     "(" <AddSub> ")",
     Neg,
@@ -30,8 +30,8 @@ pub Neg: Expr = {
     "-" <x:Term> => Expr::Neg(box x),
 }
 
-pub Number: Expr = {
-    <x:r"[0-9]+(\.[0-9]+)?"> => Expr::Number(x.parse().unwrap()),
+pub Real: Expr = {
+    <x:r"[0-9]+(\.[0-9]+)?"> => Expr::Real(x.parse().unwrap()),
 }
 
 pub Var: Expr = {
