@@ -9,6 +9,7 @@ extern crate failure_derive;
 lalrpop_mod!(pub grammar);
 
 use std::collections::HashMap;
+use std::fmt;
 use std::string::ToString;
 
 pub type Context = HashMap<String, Expr>;
@@ -87,24 +88,16 @@ impl Expr {
     }
 }
 
-impl ToString for Expr {
-    fn to_string(&self) -> String {
+impl fmt::Display for Expr {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Expr::Real(ref x) => x.to_string(),
-            Expr::Var(ref x) => x.clone(),
-            Expr::Neg(ref x) => "-".to_string() + &x.to_string(),
-            Expr::Add(ref x, ref y) => {
-                "(".to_string() + &x.to_string() + " + " + &y.to_string() + ")"
-            }
-            Expr::Mul(ref x, ref y) => {
-                "(".to_string() + &x.to_string() + " * " + &y.to_string() + ")"
-            }
-            Expr::Div(ref x, ref y) => {
-                "(".to_string() + &x.to_string() + " / " + &y.to_string() + ")"
-            }
-            Expr::Pow(ref x, ref y) => {
-                "(".to_string() + &x.to_string() + " ^ " + &y.to_string() + ")"
-            }
+            Expr::Real(ref x) => write!(f, "{}", x),
+            Expr::Var(ref x) => write!(f, "{}", x),
+            Expr::Neg(ref x) => write!(f, "-{}", x),
+            Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
+            Expr::Mul(ref x, ref y) => write!(f, "({} * {})", x, y),
+            Expr::Div(ref x, ref y) => write!(f, "({} / {})", x, y),
+            Expr::Pow(ref x, ref y) => write!(f, "({} ^ {})", x, y),
         }
     }
 }
