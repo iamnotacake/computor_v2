@@ -23,6 +23,7 @@ pub enum Expr {
     Add(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
     Div(Box<Expr>, Box<Expr>),
+    Rem(Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
 }
 
@@ -49,6 +50,7 @@ impl Expr {
             Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
             Expr::Mul(box x, box y) => x.run(context)?.mul(y.run(context)?, context),
             Expr::Div(box x, box y) => x.run(context)?.div(y.run(context)?, context),
+            Expr::Rem(box x, box y) => x.run(context)?.rem(y.run(context)?, context),
             Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
         }
     }
@@ -82,6 +84,14 @@ impl Expr {
         }
     }
 
+    pub fn rem(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+        match (self, other) {
+            (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
+            (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x % y)),
+            _ => unimplemented!("rem !Real !Real"),
+        }
+    }
+
     pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x.powf(y))),
@@ -100,6 +110,7 @@ impl fmt::Display for Expr {
             Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
             Expr::Mul(ref x, ref y) => write!(f, "({} * {})", x, y),
             Expr::Div(ref x, ref y) => write!(f, "({} / {})", x, y),
+            Expr::Rem(ref x, ref y) => write!(f, "({} % {})", x, y),
             Expr::Pow(ref x, ref y) => write!(f, "({} ^ {})", x, y),
         }
     }
