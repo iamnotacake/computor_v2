@@ -18,6 +18,7 @@ pub type Context = HashMap<String, Expr>;
 pub enum Expr {
     Real(f64),
     Var(String),
+    Matrix(Vec<Vec<f64>>),
     Neg(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
     Mul(Box<Expr>, Box<Expr>),
@@ -43,6 +44,7 @@ impl Expr {
                 Some(expr) => Ok(expr.clone()),
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
             },
+            Expr::Matrix(_) => unimplemented!(),
             Expr::Neg(box x) => x.run(context)?.neg(context),
             Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
             Expr::Mul(box x, box y) => x.run(context)?.mul(y.run(context)?, context),
@@ -93,6 +95,7 @@ impl fmt::Display for Expr {
         match self {
             Expr::Real(ref x) => write!(f, "{}", x),
             Expr::Var(ref x) => write!(f, "{}", x),
+            Expr::Matrix(ref x) => write!(f, "{:?}", x),
             Expr::Neg(ref x) => write!(f, "-{}", x),
             Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
             Expr::Mul(ref x, ref y) => write!(f, "({} * {})", x, y),
