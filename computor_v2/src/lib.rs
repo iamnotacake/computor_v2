@@ -35,6 +35,8 @@ pub enum ExprError {
     UndefinedVariable { name: String },
     #[fail(display = "division by zero")]
     DivisionByZero,
+    #[fail(display = "invalid matrix entered, every row must have same length")]
+    InvalidMatrix,
 }
 
 impl Expr {
@@ -116,9 +118,33 @@ impl fmt::Display for Expr {
     }
 }
 
+fn validate_matrix(expr: &Expr) -> bool {
+    match expr {
+        Expr::Real(_) => true,
+        Expr::Var(_) => true,
+        Expr::Matrix(ref x) => {
+            let len = x[0].len();
+
+            x.iter().skip(1).all(|v| v.len() == len)
+        }
+        Expr::Neg(ref x) => validate_matrix(x),
+        Expr::Add(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::Mul(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::Div(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::Rem(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::Pow(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+    }
+}
+
 pub fn parse(line: &str) -> Result<Expr, ExprError> {
     match grammar::AddSubParser::new().parse(line) {
-        Ok(expr) => Ok(expr),
+        Ok(expr) => {
+            if validate_matrix(&expr) {
+                Ok(expr)
+            } else {
+                Err(ExprError::InvalidMatrix)
+            }
+        }
         Err(err) => Err(ExprError::ParseError {
             err: err.to_string(),
         }),
