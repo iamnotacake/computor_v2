@@ -25,6 +25,7 @@ pub enum Expr {
     Div(Box<Expr>, Box<Expr>),
     Rem(Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
+    MatrixMul(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Fail, Debug)]
@@ -54,6 +55,7 @@ impl Expr {
             Expr::Div(box x, box y) => x.run(context)?.div(y.run(context)?, context),
             Expr::Rem(box x, box y) => x.run(context)?.rem(y.run(context)?, context),
             Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
+            Expr::MatrixMul(box x, box y) => x.run(context)?.mmul(y.run(context)?, context),
         }
     }
 
@@ -100,6 +102,12 @@ impl Expr {
             _ => unimplemented!("pow !Real !Real"),
         }
     }
+
+    pub fn mmul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+        match (self, other) {
+            _ => unimplemented!(),
+        }
+    }
 }
 
 impl fmt::Display for Expr {
@@ -114,6 +122,7 @@ impl fmt::Display for Expr {
             Expr::Div(ref x, ref y) => write!(f, "({} / {})", x, y),
             Expr::Rem(ref x, ref y) => write!(f, "({} % {})", x, y),
             Expr::Pow(ref x, ref y) => write!(f, "({} ^ {})", x, y),
+            Expr::MatrixMul(ref x, ref y) => write!(f, "({} ** {})", x, y),
         }
     }
 }
@@ -133,6 +142,7 @@ fn validate_matrix(expr: &Expr) -> bool {
         Expr::Div(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::Rem(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::Pow(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::MatrixMul(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
     }
 }
 

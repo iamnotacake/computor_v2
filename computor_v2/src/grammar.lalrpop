@@ -13,6 +13,17 @@ Comma<T>: Vec<T> = {
     }
 };
 
+Semicolon<T>: Vec<T> = {
+    <v:(<T> ";")*> <e:T?> => match e {
+        None => v,
+        Some(e) => {
+            let mut vec = v;
+            vec.push(e);
+            vec
+        }
+    }
+};
+
 // Comma<T>: Vec<T> = {
 //     <e:T> <v:("," <T>)*> => match e {
 //         None => v,
@@ -34,6 +45,7 @@ pub MulDiv: Expr = {
     <x:MulDiv> "*" <y:Pow> => Expr::Mul(box x, box y),
     <x:MulDiv> "/" <y:Pow> => Expr::Div(box x, box y),
     <x:MulDiv> "%" <y:Pow> => Expr::Rem(box x, box y),
+    <x:MulDiv> "**" <y:Pow> => Expr::MatrixMul(box x, box y),
     Pow,
 }
 
@@ -71,5 +83,5 @@ MatrixRow: Vec<f64> = {
 }
 
 pub Matrix: Expr = {
-	"[" <x:Comma<MatrixRow>> "]" => Expr::Matrix(x),
+	"[" <x:Semicolon<MatrixRow>> "]" => Expr::Matrix(x),
 }
