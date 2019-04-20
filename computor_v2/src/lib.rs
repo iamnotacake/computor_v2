@@ -40,6 +40,8 @@ pub enum ExprError {
     DivisionByZero,
     #[fail(display = "invalid matrix entered, every row must have same length")]
     InvalidMatrix,
+    #[fail(display = "calculation error: {}", err)]
+    CalcError { err: String },
 }
 
 impl Expr {
@@ -65,21 +67,27 @@ impl Expr {
     pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
             Expr::Real(x) => Ok(Expr::Real(-x)),
-            _ => unimplemented!("neg !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "neg !Real".into(),
+            }),
         }
     }
 
     pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
-            _ => unimplemented!("add !Real !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "add !Real !Real".into(),
+            }),
         }
     }
 
     pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
-            _ => unimplemented!("mul !Real !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "mul !Real !Real".into(),
+            }),
         }
     }
 
@@ -87,7 +95,9 @@ impl Expr {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x / y)),
-            _ => unimplemented!("div !Real !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "div !Real !Real".into(),
+            }),
         }
     }
 
@@ -95,14 +105,18 @@ impl Expr {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x % y)),
-            _ => unimplemented!("rem !Real !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "mod !Real !Real".into(),
+            }),
         }
     }
 
     pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x.powf(y))),
-            _ => unimplemented!("pow !Real !Real"),
+            _ => Err(ExprError::CalcError {
+                err: "pow !Real !Real".into(),
+            }),
         }
     }
 
