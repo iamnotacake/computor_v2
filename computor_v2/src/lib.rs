@@ -18,6 +18,7 @@ pub type Context = HashMap<String, Expr>;
 pub enum Expr {
     Real(f64),
     Var(String),
+    Lambda(Vec<String>, Box<Expr>),
     Matrix(Vec<Vec<f64>>),
     Neg(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -52,7 +53,8 @@ impl Expr {
                 Some(expr) => Ok(expr.clone()),
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
             },
-            Expr::Matrix(_) => unimplemented!(),
+            Expr::Lambda(args, expr) => unimplemented!(),
+            Expr::Matrix(_) => Ok(self),
             Expr::Neg(box x) => x.run(context)?.neg(context),
             Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
             Expr::Mul(box x, box y) => x.run(context)?.mul(y.run(context)?, context),
@@ -60,7 +62,17 @@ impl Expr {
             Expr::Rem(box x, box y) => x.run(context)?.rem(y.run(context)?, context),
             Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
             Expr::MatrixMul(box x, box y) => x.run(context)?.mmul(y.run(context)?, context),
-            _ => unimplemented!(),
+            Expr::AssignVar(name, box expr) => {
+                let expr = expr.run(context)?;
+                context.insert(name, expr.clone());
+
+                Ok(expr)
+            }
+            Expr::AssignFunc(name, args, box expr) => {
+                context.insert(name, Expr::Lambda(args, box expr.clone()));
+
+                Ok(expr)
+            }
         }
     }
 
@@ -132,6 +144,7 @@ impl fmt::Display for Expr {
         match self {
             Expr::Real(ref x) => write!(f, "{}", x),
             Expr::Var(ref x) => write!(f, "{}", x),
+            Expr::Lambda(ref args, ref expr) => write!(f, "({}) => {}", args.join(", "), expr),
             Expr::Matrix(ref x) => write!(f, "{:?}", x),
             Expr::Neg(ref x) => write!(f, "-{}", x),
             Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
@@ -152,6 +165,7 @@ fn validate_matrix(expr: &Expr) -> bool {
     match expr {
         Expr::Real(_) => true,
         Expr::Var(_) => true,
+        Expr::Lambda(_, ref expr) => validate_matrix(expr),
         Expr::Matrix(ref x) => {
             let len = x[0].len();
 
