@@ -80,7 +80,7 @@ pub Var: Expr = {
 
 
 pub Variable: String = {
-    <x:r"[a-zA-Z][a-zA-Z0-9]*"> => x.to_string(),
+    <x:r"[a-hj-zA-HJ-Z][a-zA-Z]*"> => x.to_lowercase(),
 }
 
 pub Number: f64 = {
