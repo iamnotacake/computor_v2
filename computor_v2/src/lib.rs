@@ -26,6 +26,8 @@ pub enum Expr {
     Rem(Box<Expr>, Box<Expr>),
     Pow(Box<Expr>, Box<Expr>),
     MatrixMul(Box<Expr>, Box<Expr>),
+    AssignVar(String, Box<Expr>),
+    AssignFunc(String, Vec<String>, Box<Expr>),
 }
 
 #[derive(Fail, Debug)]
@@ -56,6 +58,7 @@ impl Expr {
             Expr::Rem(box x, box y) => x.run(context)?.rem(y.run(context)?, context),
             Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
             Expr::MatrixMul(box x, box y) => x.run(context)?.mmul(y.run(context)?, context),
+            _ => unimplemented!(),
         }
     }
 
@@ -123,6 +126,10 @@ impl fmt::Display for Expr {
             Expr::Rem(ref x, ref y) => write!(f, "({} % {})", x, y),
             Expr::Pow(ref x, ref y) => write!(f, "({} ^ {})", x, y),
             Expr::MatrixMul(ref x, ref y) => write!(f, "({} ** {})", x, y),
+            Expr::AssignVar(ref name, ref val) => write!(f, "{} = {}", name, val),
+            Expr::AssignFunc(ref name, ref args, ref body) => {
+                write!(f, "{}({}) = {}", name, args.join(", "), body)
+            }
         }
     }
 }
@@ -143,11 +150,13 @@ fn validate_matrix(expr: &Expr) -> bool {
         Expr::Rem(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::Pow(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::MatrixMul(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
+        Expr::AssignVar(_, ref val) => validate_matrix(val),
+        Expr::AssignFunc(_, _, ref body) => validate_matrix(body),
     }
 }
 
 pub fn parse(line: &str) -> Result<Expr, ExprError> {
-    match grammar::AddSubParser::new().parse(line) {
+    match grammar::RootExprParser::new().parse(line) {
         Ok(expr) => {
             if validate_matrix(&expr) {
                 Ok(expr)

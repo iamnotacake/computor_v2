@@ -24,16 +24,20 @@ Semicolon<T>: Vec<T> = {
     }
 };
 
-// Comma<T>: Vec<T> = {
-//     <e:T> <v:("," <T>)*> => match e {
-//         None => v,
-//         Some(e) => {
-//             let mut v = v;
-//             v.push(e);
-//             v
-//         }
-//     }
-// };
+pub RootExpr: Expr = {
+    AssignVar,
+    AssignFunc,
+    AddSub,
+}
+
+pub AssignVar: Expr = {
+    <var:Variable> "=" <val:AddSub> => Expr::AssignVar(var, box val),
+}
+
+pub AssignFunc: Expr = {
+    <var:Variable> "(" <args:Comma<Variable>> ")" "=" <val:AddSub>
+        => Expr::AssignFunc(var, args, box val),
+}
 
 pub AddSub: Expr = {
     <x:AddSub> "+" <y:MulDiv> => Expr::Add(box x, box y),
@@ -71,12 +75,18 @@ pub Real: Expr = {
 }
 
 pub Var: Expr = {
-    <x:r"[a-zA-Z][a-zA-Z0-9]*"> => Expr::Var(x.to_string()),
+    <x:Variable> => Expr::Var(x),
+}
+
+
+pub Variable: String = {
+    <x:r"[a-zA-Z][a-zA-Z0-9]*"> => x.to_string(),
 }
 
 pub Number: f64 = {
     <x:r"-?[0-9]+(\.[0-9]+)?"> => x.parse().unwrap(),
 }
+
 
 MatrixRow: Vec<f64> = {
     "[" <x:Comma<Number>> "]" => x,
