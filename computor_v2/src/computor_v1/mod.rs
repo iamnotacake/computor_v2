@@ -1,10 +1,13 @@
 #![feature(box_syntax, box_patterns, slice_patterns)]
 
-extern crate computor_v1;
+pub mod parser {
+    include!(concat!(env!("OUT_DIR"), "/parser.rs"));
+}
 
-use std::env::args;
-use computor_v1::parser;
-use computor_v1::Expr;
+mod expr;
+
+use expr::parser;
+use expr::Expr;
 
 #[derive(Debug)]
 pub struct Poly {
@@ -67,9 +70,13 @@ impl Poly {
                 _ => Err(()),
             }
         } else if let Equation(box Variable(_), box Number(_)) = expr {
-            Ok(Poly { list: vec![(1, 0.0)] })
+            Ok(Poly {
+                list: vec![(1, 0.0)],
+            })
         } else if let Equation(box Neg(box Variable(_)), box Number(_)) = expr {
-            Ok(Poly { list: vec![(1, 0.0)] })
+            Ok(Poly {
+                list: vec![(1, 0.0)],
+            })
         } else {
             Err(())
         }
@@ -104,43 +111,37 @@ fn solve_quad(a: f64, b: f64, c: f64) {
     }
 }
 
-fn main() {
-    if let Some(equation) = args().nth(1) {
-        println!(">>> {}", equation);
-        match parser::equation(&equation) {
-            Ok(mut expr) => {
-                println!("==> {}", expr.to_string());
-                expr = expr.flatten();
-                expr = expr.simplify();
-                println!("==> {}", expr.to_string());
-                expr = expr.move_to_left();
-                expr = expr.flatten();
-                expr = expr.simplify();
-                expr = expr.flatten();
-                expr = expr.simplify();
-                println!("==> {}", expr.to_string());
-                // println!("{:#?}", expr);
-                if let Ok(Poly { list }) = Poly::from_expr(&expr) {
-                    println!("Polynomial: {:?}", list);
-                    match list.as_slice() {
-                        [(1, _)] => println!("x = 0"),
-                        [(2, a)] => solve_quad(*a, 0., 0.),
-                        [(1, b), (0, c)] => println!("x = {}", -c / b),
-                        [(2, a), (1, b)] => solve_quad(*a, *b, 0.),
-                        [(2, a), (0, c)] => solve_quad(*a, 0., *c),
-                        [(2, a), (1, b), (0, c)] => solve_quad(*a, *b, *c),
-                        _ => println!("I can't solve that!"),
-                    }
-                } else {
-                    println!("Not a polynomial!");
+pub fn computor_v1(equation: String) {
+    match parser::equation(&equation) {
+        Ok(mut expr) => {
+            println!("==> {}", expr.to_string());
+            expr = expr.flatten();
+            expr = expr.simplify();
+            println!("==> {}", expr.to_string());
+            expr = expr.move_to_left();
+            expr = expr.flatten();
+            expr = expr.simplify();
+            expr = expr.flatten();
+            expr = expr.simplify();
+            println!("==> {}", expr.to_string());
+            if let Ok(Poly { list }) = Poly::from_expr(&expr) {
+                println!("Polynomial: {:?}", list);
+                match list.as_slice() {
+                    [(1, _)] => println!("x = 0"),
+                    [(2, a)] => solve_quad(*a, 0., 0.),
+                    [(1, b), (0, c)] => println!("x = {}", -c / b),
+                    [(2, a), (1, b)] => solve_quad(*a, *b, 0.),
+                    [(2, a), (0, c)] => solve_quad(*a, 0., *c),
+                    [(2, a), (1, b), (0, c)] => solve_quad(*a, *b, *c),
+                    _ => println!("I can't solve that!"),
                 }
-            }
-            Err(err) => {
-                println!("    {}^", " ".repeat(err.column - 1));
-                println!("{}", err);
+            } else {
+                println!("Not a polynomial!");
             }
         }
-    } else {
-        eprintln!("Error: No input given. Give me some argument with equation.");
+        Err(err) => {
+            println!("    {}^", " ".repeat(err.column - 1));
+            println!("{}", err);
+        }
     }
 }
