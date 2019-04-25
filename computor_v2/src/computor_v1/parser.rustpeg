@@ -1,0 +1,32 @@
+use super::Expr;
+use super::Expr::*;
+
+whitespace
+    = #quiet<[ \t]+>
+
+negative -> Expr
+    = "-" x:number { Neg(box x) }
+    / "-" x:var { Neg(box x) }
+    / "-" x:atom { Neg(box x) }
+
+pub atom -> Expr
+    = number
+    / var
+    / whitespace? "(" whitespace? x:expr whitespace? ")" whitespace? { x }
+    / negative
+
+pub var -> Expr
+    = whitespace? v:$("x") whitespace? { Variable(v.chars().nth(0).unwrap()) }
+
+pub number -> Expr
+    = whitespace? n:$([0-9]+ ("." [0-9]+)?) whitespace? { Number(n.parse().unwrap()) }
+
+pub expr -> Expr = #infix<atom> {
+    #L x "+" y { Add(vec![x, y]) }
+       x "-" y { Add(vec![x, Neg(box y)]) }
+    #L x "*" y { Mul(1.0, vec![x, y]) }
+    #R x "^" y { Pow(box x, box y) }
+}
+
+pub equation -> Expr
+    = x:expr "=" y:expr { Equation(box x, box y) }

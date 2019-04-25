@@ -9,6 +9,7 @@ lto = true
 
 [build-dependencies]
 lalrpop = "*"
+peg = "*"
 
 [dependencies]
 lalrpop-util = "*"
