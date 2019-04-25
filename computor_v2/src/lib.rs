@@ -161,6 +161,11 @@ impl Expr {
     pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x.powf(y))),
+            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x.powf(y)).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "pow !Real !Real".into(),
             }),
