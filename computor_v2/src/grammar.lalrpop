@@ -30,22 +30,22 @@ pub RootExpr: Expr = {
     AddSub,
 }
 
-pub AssignVar: Expr = {
+AssignVar: Expr = {
     <var:Variable> "=" <val:AddSub> => Expr::AssignVar(var, box val),
 }
 
-pub AssignFunc: Expr = {
+AssignFunc: Expr = {
     <var:Variable> "(" <args:Comma<Variable>> ")" "=" <val:AddSub>
         => Expr::AssignFunc(var, args, box val),
 }
 
-pub AddSub: Expr = {
+AddSub: Expr = {
     <x:AddSub> "+" <y:MulDiv> => Expr::Add(box x, box y),
     <x:AddSub> "-" <y:MulDiv> => Expr::Add(box x, box Expr::Neg(box y)),
     MulDiv,
 }
 
-pub MulDiv: Expr = {
+MulDiv: Expr = {
     <x:MulDiv> "*" <y:Pow> => Expr::Mul(box x, box y),
     <x:MulDiv> "/" <y:Pow> => Expr::Div(box x, box y),
     <x:MulDiv> "%" <y:Pow> => Expr::Rem(box x, box y),
@@ -53,12 +53,12 @@ pub MulDiv: Expr = {
     Pow,
 }
 
-pub Pow: Expr = {
+Pow: Expr = {
     <x:Pow> "^" <y:Term> => Expr::Pow(box x, box y),
     Term,
 }
 
-pub Term: Expr = {
+Term: Expr = {
     Complex,
     Real,
     Var,
@@ -67,28 +67,28 @@ pub Term: Expr = {
     Neg,
 }
 
-pub Neg: Expr = {
+Neg: Expr = {
     "-" <x:Term> => Expr::Neg(box x),
 }
 
-pub Real: Expr = {
+Real: Expr = {
     <x:Number> => Expr::Real(x),
 }
 
-pub Complex: Expr = {
+Complex: Expr = {
     <x:Number> "i" => Expr::Complex(0.0, x),
 }
 
-pub Var: Expr = {
+Var: Expr = {
     <x:Variable> => Expr::Var(x),
 }
 
 
-pub Variable: String = {
+Variable: String = {
     <x:r"[a-hj-zA-HJ-Z][a-zA-Z]*"> => x.to_lowercase(),
 }
 
-pub Number: f64 = {
+Number: f64 = {
     <x:r"-?[0-9]+(\.[0-9]+)?"> => x.parse().unwrap(),
 }
 
@@ -97,6 +97,6 @@ MatrixRow: Vec<f64> = {
     "[" <x:Comma<Number>> "]" => x,
 }
 
-pub Matrix: Expr = {
+Matrix: Expr = {
 	"[" <x:Semicolon<MatrixRow>> "]" => Expr::Matrix(x),
 }
