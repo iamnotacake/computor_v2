@@ -79,6 +79,11 @@ impl Expr {
     pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
             Expr::Real(x) => Ok(Expr::Real(-x)),
+            Expr::Matrix(rows) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| -x).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "neg !Real".into(),
             }),
@@ -88,6 +93,16 @@ impl Expr {
     pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
+            (Expr::Real(y), Expr::Matrix(rows)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x + y).collect())
+                    .collect(),
+            )),
+            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x + y).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "add !Real !Real".into(),
             }),
@@ -97,6 +112,16 @@ impl Expr {
     pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
+            (Expr::Real(y), Expr::Matrix(rows)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x * y).collect())
+                    .collect(),
+            )),
+            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x * y).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "mul !Real !Real".into(),
             }),
@@ -105,8 +130,13 @@ impl Expr {
 
     pub fn div(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
+            (_, Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x / y)),
+            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x / y).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "div !Real !Real".into(),
             }),
@@ -115,8 +145,13 @@ impl Expr {
 
     pub fn rem(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            (Expr::Real(x), Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
+            (_, Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x % y)),
+            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
+                rows.iter()
+                    .map(|row| row.iter().map(|x| x % y).collect())
+                    .collect(),
+            )),
             _ => Err(ExprError::CalcError {
                 err: "mod !Real !Real".into(),
             }),
