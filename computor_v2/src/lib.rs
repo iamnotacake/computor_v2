@@ -93,16 +93,13 @@ impl Expr {
     pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
-            (Expr::Real(y), Expr::Matrix(rows)) => Ok(Expr::Matrix(
-                rows.iter()
-                    .map(|row| row.iter().map(|x| x + y).collect())
-                    .collect(),
-            )),
-            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
-                rows.iter()
-                    .map(|row| row.iter().map(|x| x + y).collect())
-                    .collect(),
-            )),
+            (Expr::Real(y), Expr::Matrix(rows)) | (Expr::Matrix(rows), Expr::Real(y)) => {
+                Ok(Expr::Matrix(
+                    rows.iter()
+                        .map(|row| row.iter().map(|x| x + y).collect())
+                        .collect(),
+                ))
+            }
             _ => Err(ExprError::CalcError {
                 err: "add !Real !Real".into(),
             }),
@@ -112,16 +109,13 @@ impl Expr {
     pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
-            (Expr::Real(y), Expr::Matrix(rows)) => Ok(Expr::Matrix(
-                rows.iter()
-                    .map(|row| row.iter().map(|x| x * y).collect())
-                    .collect(),
-            )),
-            (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
-                rows.iter()
-                    .map(|row| row.iter().map(|x| x * y).collect())
-                    .collect(),
-            )),
+            (Expr::Real(y), Expr::Matrix(rows)) | (Expr::Matrix(rows), Expr::Real(y)) => {
+                Ok(Expr::Matrix(
+                    rows.iter()
+                        .map(|row| row.iter().map(|x| x * y).collect())
+                        .collect(),
+                ))
+            }
             _ => Err(ExprError::CalcError {
                 err: "mul !Real !Real".into(),
             }),
