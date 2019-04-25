@@ -17,6 +17,7 @@ pub type Context = HashMap<String, Expr>;
 #[derive(Clone, Debug)]
 pub enum Expr {
     Real(f64),
+    Complex(f64, f64),
     Var(String),
     Lambda(Vec<String>, Box<Expr>),
     Matrix(Vec<Vec<f64>>),
@@ -48,7 +49,8 @@ pub enum ExprError {
 impl Expr {
     pub fn run(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
-            Expr::Real(x) => Ok(Expr::Real(x)),
+            Expr::Real(_) => Ok(self),
+            Expr::Complex(_, _) => Ok(self),
             Expr::Var(name) => match context.get(&name) {
                 Some(expr) => Ok(expr.clone()),
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
@@ -79,6 +81,7 @@ impl Expr {
     pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
         match self {
             Expr::Real(x) => Ok(Expr::Real(-x)),
+            Expr::Complex(x, y) => Ok(Expr::Complex(-x, -y)),
             Expr::Matrix(rows) => Ok(Expr::Matrix(
                 rows.iter()
                     .map(|row| row.iter().map(|x| -x).collect())
@@ -93,6 +96,10 @@ impl Expr {
     pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
+            (Expr::Complex(a, b), Expr::Complex(x, y)) => Ok(Expr::Complex(a + x, b + y)),
+            (Expr::Real(a), Expr::Complex(x, y)) | (Expr::Complex(x, y), Expr::Real(a)) => {
+                Ok(Expr::Complex(a + x, y))
+            }
             (Expr::Real(y), Expr::Matrix(rows)) | (Expr::Matrix(rows), Expr::Real(y)) => {
                 Ok(Expr::Matrix(
                     rows.iter()
@@ -109,6 +116,12 @@ impl Expr {
     pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
+            (Expr::Complex(a, b), Expr::Complex(x, y)) => {
+                Ok(Expr::Complex(a * x - b * y, a * y + b * x))
+            }
+            (Expr::Real(a), Expr::Complex(x, y)) | (Expr::Complex(x, y), Expr::Real(a)) => {
+                Ok(Expr::Complex(a * x, a * y))
+            }
             (Expr::Real(y), Expr::Matrix(rows)) | (Expr::Matrix(rows), Expr::Real(y)) => {
                 Ok(Expr::Matrix(
                     rows.iter()
@@ -126,6 +139,18 @@ impl Expr {
         match (self, other) {
             (_, Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x / y)),
+            (Expr::Complex(a, b), Expr::Complex(x, y)) => {
+                let a = (a, b);
+                let b = (x, y);
+                let conj = (b.0, -b.1);
+
+                let top = (a.0 * conj.0 - a.1 * conj.1, a.0 * conj.1 + a.1 * conj.0);
+                let bot = (b.0 * conj.0 - b.1 * conj.1, b.0 * conj.1 + b.1 * conj.0);
+
+                assert_eq!(bot.1, 0.0);
+
+                Ok(Expr::Complex(top.0 / bot.0, top.1 / bot.0))
+            }
             (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
                 rows.iter()
                     .map(|row| row.iter().map(|x| x / y).collect())
@@ -203,6 +228,13 @@ impl fmt::Display for Expr {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Expr::Real(ref x) => write!(f, "{}", x),
+            Expr::Complex(ref x, ref y) => {
+                if *y < 0.0 {
+                    write!(f, "{} - {}i", x, -y)
+                } else {
+                    write!(f, "{} + {}i", x, y)
+                }
+            }
             Expr::Var(ref x) => write!(f, "{}", x),
             Expr::Lambda(ref args, ref expr) => write!(f, "({}) => {}", args.join(", "), expr),
             Expr::Matrix(ref x) => write!(f, "{:?}", x),
@@ -224,6 +256,7 @@ impl fmt::Display for Expr {
 fn validate_matrix(expr: &Expr) -> bool {
     match expr {
         Expr::Real(_) => true,
+        Expr::Complex(_, _) => true,
         Expr::Var(_) => true,
         Expr::Lambda(_, ref expr) => validate_matrix(expr),
         Expr::Matrix(ref x) => {

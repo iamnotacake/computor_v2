@@ -59,6 +59,7 @@ pub Pow: Expr = {
 }
 
 pub Term: Expr = {
+    Complex,
     Real,
     Var,
     Matrix,
@@ -72,6 +73,10 @@ pub Neg: Expr = {
 
 pub Real: Expr = {
     <x:Number> => Expr::Real(x),
+}
+
+pub Complex: Expr = {
+    <x:Number> "i" => Expr::Complex(0.0, x),
 }
 
 pub Var: Expr = {
