@@ -169,7 +169,33 @@ impl Expr {
 
     pub fn mmul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
-            _ => unimplemented!(),
+            (Expr::Matrix(m1), Expr::Matrix(m2)) => {
+                if m1[0].len() != m2.len() {
+                    return Err(ExprError::CalcError {
+                        err: "matrices have invalid size".into(),
+                    });
+                }
+
+                let mut res = vec![vec![0.0; m2[0].len()]; m1.len()];
+
+                // m1 => n * m
+                // m2 => m * p
+
+                let n = m1.len();
+                let m = m1[0].len();
+                let p = m2[0].len();
+
+                for i in 0..n {
+                    for j in 0..p {
+                        res[i][j] = (0..m).map(|k| m1[i][k] * m2[k][j]).sum();
+                    }
+                }
+
+                Ok(Expr::Matrix(res))
+            }
+            _ => Err(ExprError::CalcError {
+                err: "matrix multiplication works only on matrices".into(),
+            }),
         }
     }
 }
