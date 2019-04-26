@@ -47,10 +47,18 @@ pub enum ExprError {
     CalcError { err: String },
     #[fail(display = "bad number of args for function '{}'", func)]
     BadArgsCount { func: String },
+    #[fail(display = "recursion is too deep :c")]
+    RecursiveRecursion,
 }
 
 impl Expr {
-    pub fn run(self, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn run(self, context: &mut Context, level: usize) -> Result<Expr, ExprError> {
+        let level = level + 1;
+
+        if level > 100 {
+            return Err(ExprError::RecursiveRecursion);
+        }
+
         match self {
             Expr::Real(_) => Ok(self),
             Expr::Complex(_, _) => Ok(self),
@@ -72,22 +80,24 @@ impl Expr {
                         context.insert(arg_name.to_string(), arg_val);
                     }
 
-                    Ok(expr.clone().run(&mut context)?)
+                    Ok(expr.clone().run(&mut context, level)?)
                 } else {
                     Err(ExprError::UndefinedVariable { name: name.clone() })
                 }
             }
 
             Expr::Matrix(_) => Ok(self),
-            Expr::Neg(box x) => x.run(context)?.neg(context),
-            Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
-            Expr::Mul(box x, box y) => x.run(context)?.mul(y.run(context)?, context),
-            Expr::Div(box x, box y) => x.run(context)?.div(y.run(context)?, context),
-            Expr::Rem(box x, box y) => x.run(context)?.rem(y.run(context)?, context),
-            Expr::Pow(box x, box y) => x.run(context)?.pow(y.run(context)?, context),
-            Expr::MatrixMul(box x, box y) => x.run(context)?.mmul(y.run(context)?, context),
+            Expr::Neg(box x) => x.run(context, level)?.neg(context),
+            Expr::Add(box x, box y) => x.run(context, level)?.add(y.run(context, level)?, context),
+            Expr::Mul(box x, box y) => x.run(context, level)?.mul(y.run(context, level)?, context),
+            Expr::Div(box x, box y) => x.run(context, level)?.div(y.run(context, level)?, context),
+            Expr::Rem(box x, box y) => x.run(context, level)?.rem(y.run(context, level)?, context),
+            Expr::Pow(box x, box y) => x.run(context, level)?.pow(y.run(context, level)?, context),
+            Expr::MatrixMul(box x, box y) => {
+                x.run(context, level)?.mmul(y.run(context, level)?, context)
+            }
             Expr::AssignVar(name, box expr) => {
-                let expr = expr.run(context)?;
+                let expr = expr.run(context, level)?;
                 context.insert(name, expr.clone());
 
                 Ok(expr)

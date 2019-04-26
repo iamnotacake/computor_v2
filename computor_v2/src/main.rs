@@ -18,7 +18,7 @@ fn main() {
                 Ok(expr) => {
                     println!("Parsed: {}", &expr);
 
-                    match expr.run(&mut context) {
+                    match expr.run(&mut context, 0) {
                         Ok(result) => println!("Result: {}", &result),
                         Err(err) => println!("Error: {}", err),
                     }
