@@ -35,8 +35,8 @@ AssignVar: Expr = {
 }
 
 AssignFunc: Expr = {
-    <var:Variable> "(" <args:Comma<Variable>> ")" "=" <val:AddSub>
-        => Expr::AssignFunc(var, args, box val),
+    <f:Call> "=" <val:AddSub>
+        => Expr::AssignFunc(box f, box val),
 }
 
 AddSub: Expr = {
@@ -58,10 +58,16 @@ Pow: Expr = {
     Term,
 }
 
+Call: Expr = {
+    <f:Variable> "(" <args:Comma<AddSub>> ")"
+        => Expr::Call(f, args)
+}
+
 Term: Expr = {
     Complex,
     Real,
     Var,
+    Call,
     Matrix,
     "(" <AddSub> ")",
     Neg,

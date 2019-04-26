@@ -20,6 +20,7 @@ pub enum Expr {
     Complex(f64, f64),
     Var(String),
     Lambda(Vec<String>, Box<Expr>),
+    Call(String, Vec<Expr>),
     Matrix(Vec<Vec<f64>>),
     Neg(Box<Expr>),
     Add(Box<Expr>, Box<Expr>),
@@ -29,14 +30,14 @@ pub enum Expr {
     Pow(Box<Expr>, Box<Expr>),
     MatrixMul(Box<Expr>, Box<Expr>),
     AssignVar(String, Box<Expr>),
-    AssignFunc(String, Vec<String>, Box<Expr>),
+    AssignFunc(Box<Expr>, Box<Expr>),
 }
 
 #[derive(Fail, Debug)]
 pub enum ExprError {
     #[fail(display = "parse error: {}", err)]
     ParseError { err: String },
-    #[fail(display = "undefined variable: {}", name)]
+    #[fail(display = "undefined variable or function: {}", name)]
     UndefinedVariable { name: String },
     #[fail(display = "division by zero")]
     DivisionByZero,
@@ -44,6 +45,8 @@ pub enum ExprError {
     InvalidMatrix,
     #[fail(display = "calculation error: {}", err)]
     CalcError { err: String },
+    #[fail(display = "bad number of args for function '{}'", func)]
+    BadArgsCount { func: String },
 }
 
 impl Expr {
@@ -56,6 +59,25 @@ impl Expr {
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
             },
             Expr::Lambda(args, expr) => unimplemented!(),
+
+            Expr::Call(name, args) => {
+                if let Some(Expr::Lambda(names, expr)) = context.get(&name) {
+                    if names.len() != args.len() {
+                        return Err(ExprError::BadArgsCount { func: name.clone() });
+                    }
+
+                    let mut context = context.clone();
+
+                    for (arg_name, arg_val) in names.iter().zip(args) {
+                        context.insert(arg_name.to_string(), arg_val);
+                    }
+
+                    Ok(expr.clone().run(&mut context)?)
+                } else {
+                    Err(ExprError::UndefinedVariable { name: name.clone() })
+                }
+            }
+
             Expr::Matrix(_) => Ok(self),
             Expr::Neg(box x) => x.run(context)?.neg(context),
             Expr::Add(box x, box y) => x.run(context)?.add(y.run(context)?, context),
@@ -70,10 +92,27 @@ impl Expr {
 
                 Ok(expr)
             }
-            Expr::AssignFunc(name, args, box expr) => {
-                context.insert(name, Expr::Lambda(args, box expr.clone()));
+            Expr::AssignFunc(box name_args, box expr) => {
+                if let Expr::Call(name, args) = name_args {
+                    let mut new_args = vec![];
 
-                Ok(expr)
+                    for arg in args {
+                        if let Expr::Var(n) = arg {
+                            new_args.push(n);
+                        } else {
+                            return Err(ExprError::ParseError {
+                                err: "func definition could contain only variables".into(),
+                            });
+                        }
+                    }
+
+                    // dbg!((&name, &new_args, &expr));
+                    context.insert(name, Expr::Lambda(new_args, box expr.clone()));
+
+                    Ok(expr)
+                } else {
+                    unreachable!()
+                }
             }
         }
     }
@@ -237,6 +276,7 @@ impl fmt::Display for Expr {
             }
             Expr::Var(ref x) => write!(f, "{}", x),
             Expr::Lambda(ref args, ref expr) => write!(f, "({}) => {}", args.join(", "), expr),
+            Expr::Call(ref func, ref args) => write!(f, "({})({})", func, "..."),
             Expr::Matrix(ref x) => write!(f, "{:?}", x),
             Expr::Neg(ref x) => write!(f, "-{}", x),
             Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
@@ -246,9 +286,11 @@ impl fmt::Display for Expr {
             Expr::Pow(ref x, ref y) => write!(f, "({} ^ {})", x, y),
             Expr::MatrixMul(ref x, ref y) => write!(f, "({} ** {})", x, y),
             Expr::AssignVar(ref name, ref val) => write!(f, "{} = {}", name, val),
-            Expr::AssignFunc(ref name, ref args, ref body) => {
-                write!(f, "{}({}) = {}", name, args.join(", "), body)
+            Expr::AssignFunc(_, _) => {
+                // write!(f, "{}({}) = {}", name, args.join(", "), body)
+                write!(f, "(function)",)
             }
+            _ => unimplemented!(),
         }
     }
 }
@@ -259,6 +301,7 @@ fn validate_matrix(expr: &Expr) -> bool {
         Expr::Complex(_, _) => true,
         Expr::Var(_) => true,
         Expr::Lambda(_, ref expr) => validate_matrix(expr),
+        Expr::Call(_, ref args) => args.iter().all(|expr| validate_matrix(expr)),
         Expr::Matrix(ref x) => {
             let len = x[0].len();
 
@@ -272,7 +315,7 @@ fn validate_matrix(expr: &Expr) -> bool {
         Expr::Pow(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::MatrixMul(ref x, ref y) => validate_matrix(x) && validate_matrix(y),
         Expr::AssignVar(_, ref val) => validate_matrix(val),
-        Expr::AssignFunc(_, _, ref body) => validate_matrix(body),
+        Expr::AssignFunc(_, ref body) => validate_matrix(body),
     }
 }
 
