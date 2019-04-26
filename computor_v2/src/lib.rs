@@ -111,7 +111,9 @@ impl Expr {
 
                     Ok(expr)
                 } else {
-                    unreachable!()
+                    Err(ExprError::ParseError {
+                        err: "some strange things happened".into(),
+                    })
                 }
             }
         }
@@ -290,7 +292,6 @@ impl fmt::Display for Expr {
                 // write!(f, "{}({}) = {}", name, args.join(", "), body)
                 write!(f, "(function)",)
             }
-            _ => unimplemented!(),
         }
     }
 }
