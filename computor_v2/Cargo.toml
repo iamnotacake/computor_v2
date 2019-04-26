@@ -12,6 +12,7 @@ lalrpop = "*"
 peg = "*"
 
 [dependencies]
+color-backtrace = "*"
 lalrpop-util = "*"
 regex = "*"
 rustyline = "*"

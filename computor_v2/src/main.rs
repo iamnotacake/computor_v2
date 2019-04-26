@@ -1,3 +1,4 @@
+extern crate color_backtrace;
 extern crate computor_v2;
 extern crate failure;
 extern crate rustyline;
@@ -7,6 +8,7 @@ use failure::Fail;
 use rustyline::error::ReadlineError;
 
 fn main() {
+    color_backtrace::install();
     let mut rl = rustyline::Editor::<()>::new();
     let mut context = Context::new();
 
