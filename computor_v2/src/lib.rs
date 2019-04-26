@@ -8,6 +8,8 @@ extern crate failure_derive;
 
 lalrpop_mod!(pub grammar);
 
+pub mod computor_v1;
+
 use std::collections::HashMap;
 use std::fmt;
 use std::string::ToString;

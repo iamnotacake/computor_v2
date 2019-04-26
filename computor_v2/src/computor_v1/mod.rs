@@ -6,7 +6,6 @@ pub mod parser {
 
 mod expr;
 
-use expr::parser;
 use expr::Expr;
 
 #[derive(Debug)]
@@ -99,15 +98,15 @@ fn solve_quad(a: f64, b: f64, c: f64) {
         let x = (-b) / (2. * a);
         println!("x = {:.3} / {:.3} = {:.3}", -b, 2. * a, x);
     } else {
-        println!("No real solutions. Let's use imagination");
+        println!("No real solutions.");
 
-        let d = (-discriminant).sqrt();
-
-        let x = (-b - d) / (2. * a);
-        println!("x = {:.3}*i / {:.3} = {:.3}*i", -b - d, 2. * a, x);
-
-        let x = (-b + d) / (2. * a);
-        println!("x = {:.3}*i / {:.3} = {:.3}*i", -b + d, 2. * a, x);
+        // let d = (-discriminant).sqrt();
+        //
+        // let x = (-b - d) / (2. * a);
+        // println!("x = {:.3}*i / {:.3} = {:.3}*i", -b - d, 2. * a, x);
+        //
+        // let x = (-b + d) / (2. * a);
+        // println!("x = {:.3}*i / {:.3} = {:.3}*i", -b + d, 2. * a, x);
     }
 }
 
@@ -140,7 +139,7 @@ pub fn computor_v1(equation: String) {
             }
         }
         Err(err) => {
-            println!("    {}^", " ".repeat(err.column - 1));
+            // println!("    {}^", " ".repeat(err.column - 1));
             println!("{}", err);
         }
     }
