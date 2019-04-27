@@ -14,6 +14,8 @@ fn main() {
     loop {
         match rl.readline("> ") {
             Ok(line) => {
+                rl.add_history_entry(&*line);
+
                 if line.starts_with("root ") {
                     computor_v2::computor_v1::computor_v1(line[5..].to_string());
                 } else {
