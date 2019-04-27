@@ -4,7 +4,6 @@ extern crate failure;
 extern crate rustyline;
 
 use computor_v2::Context;
-use failure::Fail;
 use rustyline::error::ReadlineError;
 
 fn main() {

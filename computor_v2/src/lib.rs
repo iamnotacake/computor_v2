@@ -68,7 +68,7 @@ impl Expr {
                 Some(expr) => Ok(expr.clone()),
                 None => Err(ExprError::UndefinedVariable { name: name.clone() }),
             },
-            Expr::Lambda(args, expr) => unimplemented!(),
+            Expr::Lambda(_args, _expr) => unimplemented!(),
 
             Expr::Call(name, args) => {
                 if let Some(Expr::Lambda(names, expr)) = context.get(&name) {
@@ -131,7 +131,7 @@ impl Expr {
         }
     }
 
-    pub fn neg(self, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn neg(self, _context: &mut Context) -> Result<Expr, ExprError> {
         match self {
             Expr::Real(x) => Ok(Expr::Real(-x)),
             Expr::Complex(x, y) => Ok(Expr::Complex(-x, -y)),
@@ -146,7 +146,7 @@ impl Expr {
         }
     }
 
-    pub fn add(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn add(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x + y)),
             (Expr::Complex(a, b), Expr::Complex(x, y)) => Ok(Expr::Complex(a + x, b + y)),
@@ -166,7 +166,7 @@ impl Expr {
         }
     }
 
-    pub fn mul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn mul(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x * y)),
             (Expr::Complex(a, b), Expr::Complex(x, y)) => {
@@ -188,7 +188,7 @@ impl Expr {
         }
     }
 
-    pub fn div(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn div(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (_, Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x / y)),
@@ -215,7 +215,7 @@ impl Expr {
         }
     }
 
-    pub fn rem(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn rem(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (_, Expr::Real(y)) if y == 0.0 => Err(ExprError::DivisionByZero),
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x % y)),
@@ -230,7 +230,7 @@ impl Expr {
         }
     }
 
-    pub fn pow(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn pow(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Real(x), Expr::Real(y)) => Ok(Expr::Real(x.powf(y))),
             (Expr::Matrix(rows), Expr::Real(y)) => Ok(Expr::Matrix(
@@ -244,7 +244,7 @@ impl Expr {
         }
     }
 
-    pub fn mmul(self, other: Expr, context: &mut Context) -> Result<Expr, ExprError> {
+    pub fn mmul(self, other: Expr, _context: &mut Context) -> Result<Expr, ExprError> {
         match (self, other) {
             (Expr::Matrix(m1), Expr::Matrix(m2)) => {
                 if m1[0].len() != m2.len() {
@@ -290,7 +290,7 @@ impl fmt::Display for Expr {
             }
             Expr::Var(ref x) => write!(f, "{}", x),
             Expr::Lambda(ref args, ref expr) => write!(f, "({}) => {}", args.join(", "), expr),
-            Expr::Call(ref func, ref args) => write!(f, "({})({})", func, "..."),
+            Expr::Call(ref func, ref _args) => write!(f, "({})({})", func, "..."),
             Expr::Matrix(ref x) => write!(f, "{:?}", x),
             Expr::Neg(ref x) => write!(f, "-{}", x),
             Expr::Add(ref x, ref y) => write!(f, "({} + {})", x, y),
